@@ -39,6 +39,29 @@ def autocorrelation(x: np.ndarray, max_lag: int | None = None) -> np.ndarray:
     return acf
 
 
+def acf_peak_strength(
+    envelope: np.ndarray,
+    candidate_lag: int,
+    *,
+    tolerance: int = 5,
+    max_lag: int | None = None,
+) -> float:
+    """Return the ACF value near *candidate_lag* (±tolerance).
+
+    Used to check whether a user-supplied A-scan length matches a real
+    periodicity peak.  Returns the maximum ACF value in the window
+    ``[candidate_lag - tolerance, candidate_lag + tolerance]``.
+    """
+    if max_lag is None:
+        max_lag = min(len(envelope) // 2, candidate_lag * 3)
+    acf = autocorrelation(envelope, max_lag=max_lag)
+    lo = max(candidate_lag - tolerance, 0)
+    hi = min(candidate_lag + tolerance + 1, len(acf))
+    if lo >= hi:
+        return 0.0
+    return float(np.max(acf[lo:hi]))
+
+
 def magnitude_squared_coherence(
     x: np.ndarray,
     y: np.ndarray,

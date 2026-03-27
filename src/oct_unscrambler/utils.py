@@ -100,3 +100,41 @@ def plot_dtype_scores(
     if save_path:
         fig.savefig(str(save_path), dpi=150)
     plt.close(fig)
+
+
+def plot_alignment_comparison(
+    envelope: np.ndarray,
+    user_ascan: int,
+    detected_ascan: int,
+    *,
+    n_bscans: int = 8,
+    title: str = "Alignment Comparison",
+    save_path: str | Path | None = None,
+) -> None:
+    """Side-by-side B-scan images using user vs. detected A-scan length.
+
+    Displayed when validation fails so the user can visually compare
+    which alignment is correct.
+    """
+    _require_mpl()
+    fig, (ax_user, ax_det) = plt.subplots(1, 2, figsize=(14, 5))
+
+    for ax, ascan, label in [
+        (ax_user, user_ascan, f"User ({user_ascan})"),
+        (ax_det, detected_ascan, f"Detected ({detected_ascan})"),
+    ]:
+        n = min(n_bscans, len(envelope) // ascan) if ascan > 0 else 0
+        if n < 1:
+            ax.set_title(f"{label} — insufficient data")
+            continue
+        segment = envelope[: n * ascan].reshape(n, ascan)
+        ax.imshow(segment, aspect="auto", cmap="gray", interpolation="nearest")
+        ax.set_xlabel("Depth sample")
+        ax.set_ylabel("B-Scan #")
+        ax.set_title(label)
+
+    fig.suptitle(title)
+    fig.tight_layout()
+    if save_path:
+        fig.savefig(str(save_path), dpi=150)
+    plt.close(fig)
