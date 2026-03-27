@@ -1,4 +1,4 @@
-# OCT Uncrambler
+# oct-raw-data-cleaner
 
 A high-performance utility designed to infer the structure of raw, serialized binary data from Optical Coherence Tomography (OCT) systems.
 
@@ -17,8 +17,9 @@ In many research environments, OCT data is saved as raw bitstreams with minimal 
 
 ```bash
 # Clone the repository
-git clone [https://github.com/your-username/oct-unscrambler.git](https://github.com/your-username/oct-unscrambler.git)
-cd oct-unscrambler
+git clone https://github.com/PhillyVanilly9119/oct-raw-data-cleaner.git
+cd oct-raw-data-cleaner
 
 # Install in editable mode
 pip install -e .
+```
