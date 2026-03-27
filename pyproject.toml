@@ -6,15 +6,14 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Philipp Matten", email = "philipp.matten@zeiss.com"}
 ]
 dependencies = [
     "numpy>=1.24.0",
     "scipy>=1.10.0",
-    "numba>=0.57.0",
     "matplotlib>=3.7.0",
-    "typer>=0.9.0",  # For the CLI
-    "rich>=13.0.0",  # For beautiful terminal output
+    "typer>=0.9.0",
+    "rich>=13.0.0",
 ]
 
 [project.optional-dependencies]
@@ -32,6 +31,15 @@ oct-unscramble = "oct_unscrambler.cli:main"
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.ruff]
 line-length = 88
-select = ["E", "F", "I"] # Error, Pyflakes, Isort
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

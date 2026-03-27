@@ -1,0 +1,102 @@
+"""Plotting utilities — diagnostic visuals for OCT data inference."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import numpy as np
+
+# matplotlib is imported lazily so the CLI stays usable in headless environments.
+_MPL_AVAILABLE = True
+try:
+    import matplotlib
+
+    matplotlib.use("Agg")  # headless-safe backend
+    import matplotlib.pyplot as plt
+except ImportError:
+    _MPL_AVAILABLE = False
+
+
+def _require_mpl() -> None:
+    if not _MPL_AVAILABLE:
+        raise ImportError(
+            "matplotlib is required for plotting.  Install it with: "
+            "pip install matplotlib"
+        )
+
+
+def plot_autocorrelation(
+    acf: np.ndarray,
+    *,
+    title: str = "Autocorrelation",
+    save_path: str | Path | None = None,
+) -> None:
+    """Plot an autocorrelation curve and optionally save to disk."""
+    _require_mpl()
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(acf, linewidth=0.6)
+    ax.set_xlabel("Lag (samples)")
+    ax.set_ylabel("R_xx")
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    if save_path:
+        fig.savefig(str(save_path), dpi=150)
+    plt.close(fig)
+
+
+def plot_bscan_preview(
+    data: np.ndarray,
+    a_scan_length: int,
+    *,
+    n_bscans: int = 1,
+    title: str = "B-Scan Preview",
+    save_path: str | Path | None = None,
+) -> None:
+    """Render one or more B-scans as a 2-D image."""
+    _require_mpl()
+    total_samples = a_scan_length * n_bscans
+    segment = data[:total_samples]
+    if n_bscans > 1:
+        image = segment.reshape(n_bscans, a_scan_length)
+    else:
+        image = segment.reshape(1, -1)
+
+    if np.issubdtype(image.dtype, np.complexfloating):
+        image = np.abs(image)
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.imshow(
+        np.real(image).astype(np.float64),
+        aspect="auto",
+        cmap="gray",
+        interpolation="nearest",
+    )
+    ax.set_xlabel("Sample index")
+    ax.set_ylabel("B-Scan #")
+    ax.set_title(title)
+    fig.tight_layout()
+    if save_path:
+        fig.savefig(str(save_path), dpi=150)
+    plt.close(fig)
+
+
+def plot_dtype_scores(
+    scores: dict[str, float],
+    *,
+    title: str = "Dtype Entropy Scores",
+    save_path: str | Path | None = None,
+) -> None:
+    """Bar chart of per-dtype entropy scores."""
+    _require_mpl()
+    labels = list(scores.keys())
+    values = [scores[k] for k in labels]
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.barh(labels, values)
+    ax.set_xlabel("Score (higher = more likely)")
+    ax.set_title(title)
+    fig.tight_layout()
+    if save_path:
+        fig.savefig(str(save_path), dpi=150)
+    plt.close(fig)
