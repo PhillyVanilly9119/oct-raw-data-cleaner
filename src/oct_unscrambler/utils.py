@@ -138,3 +138,58 @@ def plot_alignment_comparison(
     if save_path:
         fig.savefig(str(save_path), dpi=150)
     plt.close(fig)
+
+
+def plot_projections(
+    volume: np.ndarray,
+    *,
+    title: str = "Max-Intensity Projections",
+    save_path: str | Path | None = None,
+) -> None:
+    """Save a 3-panel figure with max-intensity projections along each axis.
+
+    Parameters
+    ----------
+    volume : np.ndarray
+        A 3-D array (Z, Y, X).  If 4-D the first axis is squeezed
+        (first volume taken).
+    title : str
+        Super-title for the figure.
+    save_path : path, optional
+        If given the figure is saved to disk.
+    """
+    _require_mpl()
+
+    # Normalise to 3-D
+    if volume.ndim == 4:
+        volume = volume[0]
+    if volume.ndim != 3:
+        raise ValueError(
+            f"Expected a 3-D or 4-D array, got shape {volume.shape}"
+        )
+
+    if np.issubdtype(volume.dtype, np.complexfloating):
+        volume = np.abs(volume)
+    volume = np.real(volume).astype(np.float64)
+
+    axis_labels = [
+        ("Z (depth)", "Y", "X"),
+        ("Y (B-scan)", "Z", "X"),
+        ("X (A-scan)", "Z", "Y"),
+    ]
+
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    for ax_idx, (ax, (proj_name, ylabel, xlabel)) in enumerate(
+        zip(axes, axis_labels)
+    ):
+        projection = np.max(volume, axis=ax_idx)
+        ax.imshow(projection, aspect="auto", cmap="gray", interpolation="nearest")
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title(f"MIP along {proj_name}")
+
+    fig.suptitle(title)
+    fig.tight_layout()
+    if save_path:
+        fig.savefig(str(save_path), dpi=150)
+    plt.close(fig)

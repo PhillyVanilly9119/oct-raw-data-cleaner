@@ -16,6 +16,7 @@ app = typer.Typer(
     name="oct-unscramble",
     help="Infer and unpack raw binary OCT data structures.",
     add_completion=False,
+    invoke_without_command=False,
 )
 console = Console()
 
@@ -211,6 +212,51 @@ def _npy_shape_str(npy_path: Path) -> str:
     """Read shape/dtype from .npy without loading the array."""
     loaded = np.load(str(npy_path), mmap_mode="r")
     return f"shape={loaded.shape} dtype={loaded.dtype}"
+
+
+# ── view command ─────────────────────────────────────────────────────────────
+
+
+@app.command()
+def view(
+    path: Path = typer.Argument(
+        ..., help="Path to a structured .npy file produced by 'probe'."
+    ),
+    output: Path = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Save the projection plot to this path (PNG). "
+        "Defaults to <input_stem>_projections.png next to the input.",
+    ),
+) -> None:
+    """Load a .npy volume and save max-intensity projections along all axes."""
+    if not path.is_file():
+        console.print(f"[red]Error:[/red] file not found: {path}")
+        raise typer.Exit(code=1)
+
+    volume = np.load(str(path))
+    if volume.ndim < 3:
+        console.print(
+            f"[red]Error:[/red] expected >= 3-D array, got shape {volume.shape}"
+        )
+        raise typer.Exit(code=1)
+
+    if output is None:
+        output = path.with_name(f"{path.stem}_projections.png")
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+
+    from oct_unscrambler.utils import plot_projections
+
+    plot_projections(
+        volume,
+        title=f"MIP — {path.name}",
+        save_path=output,
+    )
+    console.print(
+        f"[green]Projection plot saved → {output}[/green]"
+    )
 
 
 def main() -> None:
